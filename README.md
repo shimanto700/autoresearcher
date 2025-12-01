@@ -3,7 +3,6 @@ AI-powered research assistant with 4 specialized agents
 
 
 
-
 # 🤖 AutoResearcher: AI Research Assistant
 
 An intelligent multi-agent system that automates research paper creation using 4 specialized AI robots.
@@ -62,17 +61,12 @@ Enter your research topic when prompted, and watch the AI robots work!
 - 🤖 4 agents working in coordination
 - 💾 Full execution logs and memory tracking
 
-## 🎓 Project Info
 
-Built for: AI Agents Hackathon 2024
-Features: 8/8 requirements met
-Score: 95-100/100 expected
 
 ## 👤 Author
 
 **[Hussain Abdulah Saleh Shimanto]**
 - LinkedIn: [https://www.linkedin.com/in/hussain-shimanto/?skipRedirect=true]
--
 
 ## 📄 License
 
