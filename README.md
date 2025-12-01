@@ -70,9 +70,9 @@ Score: 95-100/100 expected
 
 ## 👤 Author
 
-**[Your Name]**
-- LinkedIn: [your-linkedin]
-- Portfolio: [your-website]
+**[Hussain Abdulah Saleh Shimanto]**
+- LinkedIn: [https://www.linkedin.com/in/hussain-shimanto/?skipRedirect=true]
+-
 
 ## 📄 License
 
