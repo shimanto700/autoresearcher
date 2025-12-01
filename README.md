@@ -68,9 +68,6 @@ Enter your research topic when prompted, and watch the AI robots work!
 **[Hussain Abdulah Saleh Shimanto]**
 - LinkedIn: [https://www.linkedin.com/in/hussain-shimanto/?skipRedirect=true]
 
-## 📄 License
-
-MIT License - Feel free to use and modify!
 
 ## 🙏 Acknowledgments
 
