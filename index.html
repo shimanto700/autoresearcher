@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoResearcher — AI Multi-Agent Research Engine</title>
+<meta name="description" content="4 specialized AI agents collaborate to generate a full research paper on any topic in under 60 seconds.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c26;
+  --border: rgba(255,255,255,0.07);
+  --border-bright: rgba(255,255,255,0.15);
+  --text: #f0eff8;
+  --muted: #7a7a96;
+  --accent: #a78bfa;
+  --accent2: #34d399;
+  --accent3: #fb923c;
+  --accent4: #60a5fa;
+  --danger: #f87171;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'Sora', system-ui, sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(167,139,250,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(167,139,250,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 1.5rem 6rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── HERO ── */
+.hero {
+  padding: 5rem 0 3rem;
+  text-align: center;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid rgba(167,139,250,0.3);
+  background: rgba(167,139,250,0.07);
+  padding: 5px 14px;
+  border-radius: 100px;
+  margin-bottom: 1.5rem;
+}
+
+.hero-eyebrow::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:.4; transform:scale(1.4); }
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.8rem, 7vw, 4.5rem);
+  line-height: 1.05;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  color: var(--muted);
+  max-width: 500px;
+  margin: 0 auto 2rem;
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+.agent-chips {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.agent-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid;
+}
+
+.chip-purple { background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.3); color: #c4b5fd; }
+.chip-orange { background: rgba(251,146,60,0.1); border-color: rgba(251,146,60,0.3); color: #fdba74; }
+.chip-green  { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.3); color: #6ee7b7; }
+.chip-blue   { background: rgba(96,165,250,0.1); border-color: rgba(96,165,250,0.3); color: #93c5fd; }
+
+/* ── INPUT SECTION ── */
+.input-section {
+  margin-top: 2.5rem;
+}
+
+.input-wrapper {
+  display: flex;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-bright);
+  border-radius: 14px;
+  padding: 8px;
+  transition: border-color .2s;
+}
+
+.input-wrapper:focus-within {
+  border-color: rgba(167,139,250,0.5);
+  box-shadow: 0 0 0 3px rgba(167,139,250,0.08);
+}
+
+#topicInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--sans);
+  font-size: 15px;
+  color: var(--text);
+  padding: 8px 12px;
+}
+
+#topicInput::placeholder { color: var(--muted); }
+
+.run-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #1a0a3a;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .2s;
+}
+
+.run-btn:hover { background: #c4b5fd; }
+.run-btn:active { transform: scale(0.97); }
+.run-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+.run-btn svg { transition: transform .2s; }
+.run-btn:not(:disabled):hover svg { transform: translateX(3px); }
+
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ex-chip {
+  font-size: 12px;
+  font-family: var(--mono);
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--border-bright);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.ex-chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(167,139,250,0.06); }
+
+/* ── PIPELINE ── */
+.pipeline-section { margin-top: 2rem; display: none; }
+.pipeline-section.show { display: block; }
+
+.phase-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.phase-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.timer-badge {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.progress-track {
+  height: 3px;
+  background: var(--surface2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 3px;
+  width: 0;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+
+.agents-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.agent-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: all .3s;
+}
+
+.agent-card.active {
+  border-color: rgba(167,139,250,0.4);
+  background: rgba(167,139,250,0.05);
+}
+
+.agent-card.done {
+  border-color: rgba(52,211,153,0.35);
+  background: rgba(52,211,153,0.04);
+}
+
+.agent-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.agent-icon-wrap {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+
+.icon-lib   { background: rgba(96,165,250,0.15); }
+.icon-sci   { background: rgba(251,146,60,0.15); }
+.icon-teach { background: rgba(52,211,153,0.15); }
+.icon-write { background: rgba(167,139,250,0.15); }
+
+.agent-meta { flex: 1; min-width: 0; }
+.agent-name { font-size: 13px; font-weight: 600; }
+.agent-status { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+.agent-card.active .agent-status { color: var(--accent); }
+.agent-card.done .agent-status { color: var(--accent2); }
+
+.agent-bar-track {
+  height: 2px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.agent-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  width: 0;
+  transition: width .5s ease;
+}
+
+.agent-card.active .agent-bar-fill { background: var(--accent); width: 65%; }
+.agent-card.done .agent-bar-fill { background: var(--accent2); width: 100%; }
+
+/* ── LOG ── */
+.log-section { margin-top: 14px; }
+.log-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  max-height: 140px;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-bright) transparent;
+}
+
+.log-line { color: var(--muted); }
+.log-line.hi { color: var(--accent); }
+.log-line.ok { color: var(--accent2); }
+
+/* ── RESULTS ── */
+.results-section { margin-top: 2rem; display: none; }
+.results-section.show { display: block; }
+
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-val {
+  font-family: var(--serif);
+  font-size: 2rem;
+  color: var(--accent);
+  display: block;
+}
+
+.stat-lbl {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-top: 4px;
+}
+
+/* ── TABS ── */
+.tabs-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.tab-row {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab {
+  flex-shrink: 0;
+  padding: 12px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.tab-pane { display: none; padding: 20px; }
+.tab-pane.active { display: block; }
+
+.output-text {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.8;
+  color: #d4d4e8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── ACTIONS ── */
+.action-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px;
+  border-radius: 10px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.btn-download {
+  background: rgba(52,211,153,0.1);
+  border: 1px solid rgba(52,211,153,0.3);
+  color: var(--accent2);
+}
+
+.btn-download:hover { background: rgba(52,211,153,0.18); }
+
+.btn-reset {
+  background: var(--surface);
+  border: 1px solid var(--border-bright);
+  color: var(--muted);
+}
+
+.btn-reset:hover { color: var(--text); border-color: var(--text); }
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center;
+  padding: 3rem 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+  border-top: 1px solid var(--border);
+  margin-top: 4rem;
+}
+
+.footer a { color: var(--accent); text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.pipeline-section.show { animation: fadeUp .4s ease; }
+.results-section.show { animation: fadeUp .4s ease; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinning { animation: spin 1s linear infinite; display: inline-block; }
+
+@media (max-width: 540px) {
+  .agents-grid { grid-template-columns: 1fr; }
+  .stats-bar { grid-template-columns: 1fr 1fr; }
+  .stats-bar .stat-card:last-child { grid-column: 1/-1; }
+  .hero h1 { font-size: 2.4rem; }
+  .action-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">AI Multi-Agent Research Engine</div>
+    <h1>Auto<em>Researcher</em></h1>
+    <p class="hero-sub">4 specialized AI agents collaborate in real-time to generate a full, structured research paper on any topic in under 60 seconds.</p>
+    <div class="agent-chips">
+      <span class="agent-chip chip-blue">📚 Library Agent</span>
+      <span class="agent-chip chip-orange">🧪 Science Agent</span>
+      <span class="agent-chip chip-green">👨‍🏫 Teacher Agent</span>
+      <span class="agent-chip chip-purple">✍️ Writer Agent</span>
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="input-section">
+    <div class="input-wrapper">
+      <input id="topicInput" type="text" placeholder="Enter any research topic…" autocomplete="off" />
+      <button class="run-btn" id="runBtn" onclick="startResearch()">
+        <span id="runBtnText">Run agents</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" id="runBtnIcon"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="examples">
+      <span class="ex-chip" onclick="setTopic('Artificial Intelligence in Medical Diagnosis')">AI in Medicine</span>
+      <span class="ex-chip" onclick="setTopic('Climate Change Mitigation Strategies')">Climate Change</span>
+      <span class="ex-chip" onclick="setTopic('Quantum Computing Applications')">Quantum Computing</span>
+      <span class="ex-chip" onclick="setTopic('CRISPR Gene Editing Ethics')">CRISPR Ethics</span>
+      <span class="ex-chip" onclick="setTopic('Social Media Effects on Mental Health')">Mental Health</span>
+      <span class="ex-chip" onclick="setTopic('Blockchain in Supply Chain Management')">Blockchain</span>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="pipeline-section" id="pipelineSection">
+    <div class="phase-row">
+      <span class="phase-label" id="phaseLabel">Initializing…</span>
+      <span class="timer-badge" id="timerBadge">0.0s</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="agents-grid">
+      <div class="agent-card" id="card-library">
+        <div class="agent-head">
+          <div class="agent-icon-wrap icon-lib">📚</div>
+          <div class="agent-meta">
+            <div class="agent-name">Library Agent</div>
+            <div class="agent-status" id="st-library">Waiting…</div>
+          </div>
+        </div>
+        <div class="agent-bar-track"><div class="agent-bar-fill" id="bar-library"></div></div>
+      </div>
+
+      <div class="agent-card" id="card-science">
+        <div class="agent-head">
+          <div class="agent-icon-wrap icon-sci">🧪</div>
+          <div class="agent-meta">
+            <div class="agent-name">Science Agent</div>
+            <div class="agent-status" id="st-science">Waiting…</div>
+          </div>
+        </div>
+        <div class="agent-bar-track"><div class="agent-bar-fill" id="bar-science"></div></div>
+      </div>
+
+      <div class="agent-card" id="card-teacher">
+        <div class="agent-head">
+          <div class="agent-icon-wrap icon-teach">👨‍🏫</div>
+          <div class="agent-meta">
+            <div class="agent-name">Teacher Agent</div>
+            <div class="agent-status" id="st-teacher">Waiting…</div>
+          </div>
+        </div>
+        <div class="agent-bar-track"><div class="agent-bar-fill" id="bar-teacher"></div></div>
+      </div>
+
+      <div class="agent-card" id="card-writer">
+        <div class="agent-head">
+          <div class="agent-icon-wrap icon-write">✍️</div>
+          <div class="agent-meta">
+            <div class="agent-name">Writer Agent</div>
+            <div class="agent-status" id="st-writer">Waiting…</div>
+          </div>
+        </div>
+        <div class="agent-bar-track"><div class="agent-bar-fill" id="bar-writer"></div></div>
+      </div>
+    </div>
+
+    <div class="log-section">
+      <div class="log-box" id="logBox"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-section" id="resultsSection">
+    <div class="stats-bar">
+      <div class="stat-card">
+        <span class="stat-val" id="statTime">—</span>
+        <span class="stat-lbl">Seconds</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val">4</span>
+        <span class="stat-lbl">Agents</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="statWords">—</span>
+        <span class="stat-lbl">Words</span>
+      </div>
+    </div>
+
+    <div class="tabs-wrap">
+      <div class="tab-row">
+        <div class="tab active" onclick="showTab('paper',0)">Full Paper</div>
+        <div class="tab" onclick="showTab('library',1)">Literature</div>
+        <div class="tab" onclick="showTab('science',2)">Experiments</div>
+        <div class="tab" onclick="showTab('review',3)">Peer Review</div>
+      </div>
+      <div class="tab-pane active" id="pane-paper"><pre class="output-text" id="out-paper"></pre></div>
+      <div class="tab-pane" id="pane-library"><pre class="output-text" id="out-library"></pre></div>
+      <div class="tab-pane" id="pane-science"><pre class="output-text" id="out-science"></pre></div>
+      <div class="tab-pane" id="pane-review"><pre class="output-text" id="out-review"></pre></div>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn btn-download" onclick="downloadPaper()">
+        ⬇ Download paper (.txt)
+      </button>
+      <button class="action-btn btn-reset" onclick="resetApp()">
+        ↺ New topic
+      </button>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Built with <a href="https://github.com/shimanto700/autoresearcher" target="_blank">AutoResearcher</a> · Powered by Claude AI · <a href="https://github.com/shimanto700/autoresearcher" target="_blank">View source on GitHub</a></p>
+  </div>
+
+</div>
+
+<script>
+// ── State ──
+let results = {};
+let startTime, timerInterval;
+
+// ── Helpers ──
+function setTopic(t) {
+  document.getElementById('topicInput').value = t;
+  document.getElementById('topicInput').focus();
+}
+
+function showTab(name, idx) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  ['paper','library','science','review'].forEach(n => {
+    document.getElementById('pane-'+n).classList.toggle('active', n===name);
+  });
+}
+
+function log(msg, cls='') {
+  const box = document.getElementById('logBox');
+  const line = document.createElement('div');
+  line.className = 'log-line' + (cls ? ' '+cls : '');
+  const ts = ((Date.now()-startTime)/1000).toFixed(1);
+  line.textContent = `[${ts}s] ${msg}`;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setAgent(id, state, status) {
+  const card = document.getElementById('card-'+id);
+  card.className = 'agent-card' + (state==='active' ? ' active' : state==='done' ? ' done' : '');
+  document.getElementById('st-'+id).textContent = status;
+}
+
+function setProgress(pct) {
+  document.getElementById('progressFill').style.width = pct+'%';
+}
+
+function setPhase(txt) {
+  document.getElementById('phaseLabel').textContent = txt;
+}
+
+// ── Timer ──
+function startTimer() {
+  startTime = Date.now();
+  timerInterval = setInterval(() => {
+    document.getElementById('timerBadge').textContent =
+      ((Date.now()-startTime)/1000).toFixed(1)+'s';
+  }, 100);
+}
+
+function stopTimer() { clearInterval(timerInterval); }
+
+// ── API call ──
+async function callClaude(systemPrompt, userPrompt) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }]
+    })
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content[0].text;
+}
+
+// ── Main pipeline ──
+async function startResearch() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) { document.getElementById('topicInput').focus(); return; }
+
+  const runBtn = document.getElementById('runBtn');
+  runBtn.disabled = true;
+  document.getElementById('runBtnText').textContent = 'Running…';
+
+  document.getElementById('logBox').innerHTML = '';
+  document.getElementById('pipelineSection').classList.add('show');
+  document.getElementById('resultsSection').classList.remove('show');
+  ['library','science','teacher','writer'].forEach(id => setAgent(id,'idle','Waiting…'));
+  setProgress(0);
+  startTimer();
+  log(`Starting pipeline for: "${topic}"`, 'hi');
+
+  try {
+    // PHASE 1 — Library + Science in parallel
+    setPhase('Phase 1 — Parallel search & experiments');
+    setProgress(5);
+    setAgent('library','active','Searching literature…');
+    setAgent('science','active','Designing experiments…');
+    log('Library Agent + Science Agent running in parallel…', 'hi');
+
+    const [libraryResult, scienceResult] = await Promise.all([
+      callClaude(
+        'You are an expert Library Agent — a scholarly research analyst. Be precise and academic.',
+        `Research topic: "${topic}"\n\nProvide:\n1. KEY FINDINGS — Summarize major findings from existing literature (4–5 sentences).\n2. TRENDS — List 3 major research trends with brief explanations.\n3. RESEARCH GAPS — Identify 2–3 open questions or gaps the field has not yet addressed.\n\nUse clear section headers. Be substantive and specific.`
+      ),
+      callClaude(
+        'You are the Science Agent — an experimental research designer. Be rigorous and specific.',
+        `Research topic: "${topic}"\n\nDesign 2 distinct research experiments.\n\nFor each, provide:\n- HYPOTHESIS: One clear, testable hypothesis.\n- METHODOLOGY: Step-by-step experimental approach (3–4 sentences).\n- EXPECTED OUTCOME: What results are expected and why.\n- METRICS: Key variables and measurements.\n\nLabel them EXPERIMENT 1 and EXPERIMENT 2 clearly.`
+      )
+    ]);
+
+    results.library = libraryResult;
+    results.science = scienceResult;
+    setAgent('library','done','Complete ✓');
+    setAgent('science','done','Complete ✓');
+    setProgress(40);
+    log('Library Agent — complete', 'ok');
+    log('Science Agent — complete', 'ok');
+
+    // PHASE 2 — Teacher review
+    setPhase('Phase 2 — Peer review & quality check');
+    setAgent('teacher','active','Reviewing outputs…');
+    log('Teacher Agent reviewing combined work…', 'hi');
+
+    const teacherResult = await callClaude(
+      'You are the Teacher Agent — a constructive peer reviewer and academic mentor.',
+      `You are peer-reviewing work on the topic: "${topic}".\n\nLITERATURE ANALYSIS:\n${libraryResult}\n\nEXPERIMENTAL DESIGN:\n${scienceResult}\n\nProvide a structured review:\n1. STRENGTHS — What is done well (3 specific points).\n2. IMPROVEMENTS — 2 actionable suggestions to strengthen the work.\n3. METHODOLOGY NOTES — Comments on experimental rigor.\n4. OVERALL ASSESSMENT — 2-sentence summary of quality and readiness.\n\nBe constructive, specific, and professional.`
+    );
+
+    results.teacher = teacherResult;
+    setAgent('teacher','done','Complete ✓');
+    setProgress(65);
+    log('Teacher Agent — complete', 'ok');
+
+    // PHASE 3 — Writer
+    setPhase('Phase 3 — Writing final research paper');
+    setAgent('writer','active','Composing paper…');
+    log('Writer Agent composing final paper…', 'hi');
+
+    const writerResult = await callClaude(
+      'You are the Writer Agent — a skilled academic writer who produces clear, publication-ready papers.',
+      `Write a complete, well-structured research paper on: "${topic}"\n\nUse the following research materials:\n\nLITERATURE REVIEW:\n${libraryResult}\n\nEXPERIMENTAL DESIGN:\n${scienceResult}\n\nPEER REVIEW NOTES:\n${teacherResult}\n\nWrite the full paper with these sections (use the exact headers):\n\nTITLE\n\nABSTRACT\n\nINTRODUCTION\n\nLITERATURE REVIEW\n\nMETHODOLOGY\n\nRESULTS & DISCUSSION\n\nCONCLUSION\n\nREFERENCES\n\nMake it coherent, academic, and well-written. Each section should be substantive (3–5 sentences minimum). References should follow APA format (can be illustrative).`
+    );
+
+    results.writer = writerResult;
+    setAgent('writer','done','Complete ✓');
+    setProgress(100);
+    stopTimer();
+
+    const elapsed = ((Date.now()-startTime)/1000).toFixed(1);
+    const wordCount = writerResult.split(/\s+/).length;
+
+    log(`Pipeline complete in ${elapsed}s — paper ready!`, 'ok');
+    setPhase(`Done — paper generated in ${elapsed}s`);
+
+    document.getElementById('statTime').textContent = elapsed;
+    document.getElementById('statWords').textContent = wordCount;
+
+    document.getElementById('out-paper').textContent = writerResult;
+    document.getElementById('out-library').textContent = libraryResult;
+    document.getElementById('out-science').textContent = scienceResult;
+    document.getElementById('out-review').textContent = teacherResult;
+
+    showTab('paper', 0);
+    document.getElementById('resultsSection').classList.add('show');
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch(err) {
+    stopTimer();
+    log('Error: ' + err.message);
+    setPhase('Error — please try again');
+  } finally {
+    runBtn.disabled = false;
+    document.getElementById('runBtnText').textContent = 'Run agents';
+  }
+}
+
+function downloadPaper() {
+  const topic = document.getElementById('topicInput').value || 'research';
+  const slug = topic.replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+  const fullText = [
+    '=== AUTORESEARCHER OUTPUT ===',
+    `Topic: ${topic}`,
+    `Generated: ${new Date().toLocaleString()}`,
+    '',
+    '=== FULL PAPER ===',
+    results.writer || '',
+    '',
+    '=== LITERATURE REVIEW (Library Agent) ===',
+    results.library || '',
+    '',
+    '=== EXPERIMENTS (Science Agent) ===',
+    results.science || '',
+    '',
+    '=== PEER REVIEW (Teacher Agent) ===',
+    results.teacher || '',
+  ].join('\n');
+
+  const blob = new Blob([fullText], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `autoresearcher_${slug}.txt`;
+  a.click();
+}
+
+function resetApp() {
+  document.getElementById('resultsSection').classList.remove('show');
+  document.getElementById('pipelineSection').classList.remove('show');
+  document.getElementById('topicInput').value = '';
+  document.getElementById('topicInput').focus();
+  results = {};
+}
+
+// Enter key support
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('topicInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') startResearch();
+  });
+});
+</script>
+</body>
+</html>
